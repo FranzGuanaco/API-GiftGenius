@@ -1,0 +1,10 @@
+1/ne pas oublier de mettre en non null certain argument comme la category et les occasions et les remplir automatiquemenet dans le scrapping
+2/ajouter photo dans table seller
+3/verifier le nom des produits dans le scrapping
+
+
+
+6/ filtre de prix, marque et vendeur
+7/ ajouter les dates de mise en ventes
+9/ afficher produit similaires
+10/ afficher les photos, avoir plusieurs photos
