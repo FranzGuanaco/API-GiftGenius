@@ -30,7 +30,15 @@ client.connect()
 // Select * categories from products
 app.get('/api/products', async (req, res) => {
   try {
-    const query = 'SELECT category, array_agg(name) FROM products GROUP BY category';
+    const query = `SELECT p.category, 
+    array_agg(p.brand) AS brand, 
+    array_agg(p.name) AS name,
+    array_agg(DISTINCT p.seller_id) AS seller, 
+    array_agg(DISTINCT r.link) AS link,
+    (SELECT COUNT(*) FROM products) AS total_product_count
+              FROM products p
+              JOIN price r ON p.seller_id = r.seller
+              GROUP BY p.category;`
     const result = await client.query(query);
     const products = result.rows;
     console.log(products);
@@ -47,11 +55,19 @@ app.get('/api/products', async (req, res) => {
 app.get('/api/Filtremarque', async (req, res) => {
   const {brand_name} = req.query
   try {
-    const query = 'SELECT category, array_agg(name) FROM products WHERE brand = $1 GROUP BY category';
+    const query = `SELECT p.category, 
+    array_agg(p.name) AS name, 
+    array_agg(DISTINCT p.seller_id) AS seller, 
+    array_agg(DISTINCT r.link) AS link,
+    (SELECT COUNT(*) FROM products WHERE brand = $1) AS total_product_count
+FROM products p
+JOIN price r ON p.seller_id = r.seller
+WHERE p.brand = $1
+GROUP BY p.category;`
     const value = [brand_name];
     const result = await client.query(query, value);
     const brands = result.rows;
-    console.log('le filtre marque fonctionne', brands);
+    console.log('le filtre marque fonctionne correctement', brands);
     res.json(brands);
   } catch (error) {
     console.error('Une erreur s\'est produite lors de la récupération des marques:', error);
@@ -64,11 +80,15 @@ app.get('/api/Filtrevendeur', async (req, res) => {
   const { seller_name } = req.query;
   try {
     const query = `
-    SELECT p.category, array_agg(s.name) AS array_agg
-    FROM products p
-    JOIN seller s ON p.seller_id = s.pk
-    WHERE s.name = $1
-    GROUP BY p.category;`;
+                  SELECT p.category, 
+                      array_agg(p.name) AS name, 
+                      array_agg(DISTINCT p.seller_id) AS seller, 
+                      array_agg(DISTINCT r.link) AS link
+                  FROM products p
+                  JOIN seller s ON p.seller_id = s.pk
+                  JOIN price r ON p.seller_id = r.seller
+                  WHERE s.name = $1
+                    GROUP BY p.category;`;
 
     const value = [seller_name];
     const result = await client.query(query, value);
@@ -86,11 +106,15 @@ app.get('/api/Filtre/vendeur/marque', async (req, res) => {
   const { seller_name, brand_name} = req.query;
   try {
     const query = `
-    SELECT p.category, array_agg(s.name) AS array_agg
-    FROM products p
-    JOIN seller s ON p.seller_id = s.pk
-    WHERE s.name = $1 AND brand = $2
-    GROUP BY p.category;`;
+                    SELECT p.category, 
+                        array_agg(p.name) AS name, 
+                        array_agg(DISTINCT p.seller_id) AS seller, 
+                        array_agg(DISTINCT r.link) AS link
+                    FROM products p
+                    JOIN seller s ON p.seller_id = s.pk
+                    JOIN price r ON p.seller_id = r.seller
+                    WHERE s.name = $1 AND p.brand = $2
+                    GROUP BY p.category;`
 
     const value = [seller_name, brand_name];
     const result = await client.query(query, value);
