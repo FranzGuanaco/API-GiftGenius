@@ -56,17 +56,18 @@ app.get('/api/products', async (req, res) => {
 app.get('/api/Filtremarque', async (req, res) => {
   const {brand_name} = req.query
   try {
+    const brandFilter = brand_name.split(',')
     const query = `SELECT p.category, 
-    array_agg(p.name) AS name, 
-    array_agg(DISTINCT p.seller_id) AS seller, 
-    array_agg(p.description) AS desc,
-    array_agg(DISTINCT r.link) AS link,
-    (SELECT COUNT(*) FROM products WHERE brand = $1) AS total_product_count
-FROM products p
-JOIN price r ON p.seller_id = r.seller
-WHERE p.brand = $1
-GROUP BY p.category;`
-    const value = [brand_name];
+                      array_agg(p.name) AS name, 
+                      array_agg(DISTINCT p.seller_id) AS seller, 
+                      array_agg(p.description) AS desc,
+                      array_agg(DISTINCT r.link) AS link
+                          
+                          FROM products p
+                          JOIN price r ON p.seller_id = r.seller
+                          WHERE p.brand = ANY($1)
+                          GROUP BY p.category;`
+    const value = [brandFilter];
     const result = await client.query(query, value);
     const brands = result.rows;
     console.log('le filtre marque fonctionne correctement', brands);
@@ -81,6 +82,7 @@ GROUP BY p.category;`
 app.get('/api/Filtrevendeur', async (req, res) => {
   const { seller_name } = req.query;
   try {
+    const sellerFilter = seller_name.split(',');
     const query = `
                   SELECT p.category, 
                       array_agg(p.name) AS name, 
@@ -90,10 +92,10 @@ app.get('/api/Filtrevendeur', async (req, res) => {
                   FROM products p
                   JOIN seller s ON p.seller_id = s.pk
                   JOIN price r ON p.seller_id = r.seller
-                  WHERE s.name = $1
+                  WHERE s.name = ANY($1)
                     GROUP BY p.category;`;
 
-    const value = [seller_name];
+    const value = [sellerFilter];
     const result = await client.query(query, value);
     const seller = result.rows;
     console.log('le filtre vendeur fonctionne', seller);
@@ -175,7 +177,7 @@ app.get('/api/Filtre/vendeur/marque/categorie', async (req, res) => {
                     FROM products p
                     JOIN seller s ON p.seller_id = s.pk
                     JOIN price r ON p.seller_id = r.seller
-                    WHERE s.name = $1 AND p.brand = $2 AND p.category = ANY($1)
+                    WHERE s.name = $1 AND p.brand = $2 AND p.category = ANY($3)
                     GROUP BY p.category;`
 
     const value = [seller_name, brand_name, categories];
