@@ -108,8 +108,12 @@ app.get('/api/Filtrevendeur', async (req, res) => {
 
 // filtre pour les vendeurs et marque
 app.get('/api/Filtre/vendeur/marque', async (req, res) => {
-  const { seller_name, brand_name} = req.query;
+  const { seller_name, brand_name } = req.query;
   try {
+    // Split les paramètres de requête pour créer des tableaux
+    const sellerFilter = seller_name.split(',');
+    const brandFilter = brand_name.split(',');
+
     const query = `
                     SELECT p.category, 
                         array_agg(p.name) AS name, 
@@ -119,19 +123,21 @@ app.get('/api/Filtre/vendeur/marque', async (req, res) => {
                     FROM products p
                     JOIN seller s ON p.seller_id = s.pk
                     JOIN price r ON p.seller_id = r.seller
-                    WHERE s.name = $1 AND p.brand = $2
+                    WHERE s.name = ANY($1) AND p.brand = ANY($2)
                     GROUP BY p.category;`
 
-    const value = [seller_name, brand_name];
-    const result = await client.query(query, value);
+    // Utilisez les tableaux filtrés comme valeurs pour la requête
+    const values = [sellerFilter, brandFilter];
+    const result = await client.query(query, values);
     const sellerBrand = result.rows;
     console.log('le filtre vendeur/marque fonctionne', sellerBrand);
     res.json(sellerBrand);
   } catch (error) {
-    console.error('Une erreur s\'est produite lors de la récupération des vendeur:', error);
+    console.error('Une erreur s\'est produite lors de la récupération des données:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
+
 
 // filtre pour les categories des produits
 app.get('/api/categoriesfilter', async (req, res) => {
@@ -163,11 +169,14 @@ app.get('/api/categoriesfilter', async (req, res) => {
   }
 });
 
-// filtre pour les categories/marque/vendeur des produits
-app.get('/api/Filtre/vendeur/marque/categorie', async (req, res) => {
-  const { seller_name, brand_name, category_name} = req.query;
+// filtre pour les categories et marque
+app.get('/api/Filtre/category/marque', async (req, res) => {
+  const { category_name, brand_name } = req.query;
   try {
-    const categories = category_name.split(',');
+    // Split les paramètres de requête pour créer des tableaux
+    const categoryFilter = category_name.split(',');
+    const brandFilter = brand_name.split(',');
+
     const query = `
                     SELECT p.category, 
                         array_agg(p.name) AS name, 
@@ -177,19 +186,54 @@ app.get('/api/Filtre/vendeur/marque/categorie', async (req, res) => {
                     FROM products p
                     JOIN seller s ON p.seller_id = s.pk
                     JOIN price r ON p.seller_id = r.seller
-                    WHERE s.name = $1 AND p.brand = $2 AND p.category = ANY($3)
+                    WHERE p.brand = ANY($2) AND p.category = ANY($1)
                     GROUP BY p.category;`
 
-    const value = [seller_name, brand_name, categories];
-    const result = await client.query(query, value);
-    const sellerBrandCategory = result.rows;
-    console.log('le filtre vendeur/marque fonctionne', sellerBrandCategory);
-    res.json(sellerBrandCategory);
+    // Utilisez les tableaux filtrés comme valeurs pour la requête
+    const values = [categoryFilter, brandFilter];
+    const result = await client.query(query, values);
+    const catBrand = result.rows;
+    console.log('le filtre category/marque fonctionne', catBrand);
+    res.json(catBrand);
   } catch (error) {
-    console.error('Une erreur s\'est produite lors de la récupération des vendeur:', error);
+    console.error('Une erreur s\'est produite lors de la récupération des données:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
+
+// filtre pour les categories/marque/vendeur des produits
+app.get('/api/Filtre/vendeur/marque/categorie', async (req, res) => {
+  const { seller_name, brand_name, category_name } = req.query;
+  try {
+    // Split les chaînes de requête pour créer des tableaux de filtres
+    const sellerFilter = seller_name.split(',');
+    const brandFilter = brand_name.split(',');
+    const categoryFilter = category_name.split(',');
+
+    const query = `
+                    SELECT p.category, 
+                        array_agg(p.name) AS name, 
+                        array_agg(DISTINCT p.seller_id) AS seller, 
+                        array_agg(p.description) AS desc,
+                        array_agg(DISTINCT r.link) AS link
+                    FROM products p
+                    JOIN seller s ON p.seller_id = s.pk
+                    JOIN price r ON p.seller_id = r.seller
+                    WHERE s.name = ANY($1) AND p.brand = ANY($2) AND p.category = ANY($3)
+                    GROUP BY p.category;`;
+
+    // Utilisez les tableaux filtrés comme valeurs pour la requête
+    const values = [sellerFilter, brandFilter, categoryFilter];
+    const result = await client.query(query, values);
+    const sellerBrandCategory = result.rows;
+    console.log('le filtre vendeur/marque/categorie fonctionne', sellerBrandCategory);
+    res.json(sellerBrandCategory);
+  } catch (error) {
+    console.error('Une erreur s\'est produite lors de la récupération des données:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 
 
 
