@@ -201,6 +201,39 @@ app.get('/api/Filtre/category/marque', async (req, res) => {
   }
 });
 
+
+// filtre pour les categories et vendeur
+app.get('/api/Filtre/category/vendeur', async (req, res) => {
+  const { category_name, seller_name } = req.query;
+  try {
+    // Split les paramètres de requête pour créer des tableaux
+    const categoryFilter = category_name.split(',');
+    const sellerFilter = seller_name.split(',');
+
+    const query = `
+                    SELECT p.category, 
+                        array_agg(p.name) AS name, 
+                        array_agg(DISTINCT p.seller_id) AS seller, 
+                        array_agg(p.description) AS desc,
+                        array_agg(DISTINCT r.link) AS link
+                    FROM products p
+                    JOIN seller s ON p.seller_id = s.pk
+                    JOIN price r ON p.seller_id = r.seller
+                    WHERE s.name = ANY($2) AND p.category = ANY($1)
+                    GROUP BY p.category;`
+
+    // Utilisez les tableaux filtrés comme valeurs pour la requête
+    const values = [categoryFilter, sellerFilter];
+    const result = await client.query(query, values);
+    const catBrand = result.rows;
+    console.log('le filtre category/marque fonctionne', catBrand);
+    res.json(catBrand);
+  } catch (error) {
+    console.error('Une erreur s\'est produite lors de la récupération des données:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // filtre pour les categories/marque/vendeur des produits
 app.get('/api/Filtre/vendeur/marque/categorie', async (req, res) => {
   const { seller_name, brand_name, category_name } = req.query;
