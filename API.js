@@ -329,6 +329,7 @@ app.get('/api/marques', async (req, res) => {
 
 // afficher l'ensemble des vendeurs
 app.get('/api/vendeur', async (req, res) => {
+
   try {
     const query = 'SELECT DISTINCT name  FROM seller';
     const result = await client.query(query);
@@ -340,6 +341,46 @@ app.get('/api/vendeur', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
+
+// filtre de recherche pour le quiz
+app.get('/api/quiz', async (req, res) => {
+  // echelle pour filtrer le budget
+  const { limitBudget } = req.query;
+  try {
+    const budgetQuery = `SELECT *
+                  FROM products
+                  JOIN price ON products.pk = price.product
+                  WHERE CAST(price.price AS numeric) < $1;`
+    const values = [limitBudget]; // Utilisation de paramètres de requête pour prévenir les injections SQL
+    const result = await client.query(budgetQuery, values);
+    const budget = result.rows;
+    console.log('elimination d\'un premier element', budget);
+    res.json(budget);
+      // Vérifiez si des produits ont été trouvés
+      if (budget.length === 0) {
+        return res.status(404).json({ message: "Aucun produit trouvé pour ce budget" });
+      }      
+  } catch (error) {
+    console.error('Une erreur s\'est produite lors de la récupération des marques:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+app.get('/api/reviews', async (req, res) => {
+  const { productIds, occasionType } = req.query;  // Attend une liste d'identifiants de produits séparés par des virgules
+  try {
+    const ids = productIds.split(',').map(id => Number(id.trim()));
+    const reviewsQuery = `SELECT * FROM products 
+                          JOIN occasion ON products.pk = occasion.product 
+                          WHERE occasion.${occasionType} = TRUE AND products.pk = ANY($1)`;
+    const reviewsResult = await client.query(reviewsQuery, [ids]);
+    res.json(reviewsResult.rows);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des avis:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 
 
 app.get('/', async (req, res) => {
