@@ -268,8 +268,6 @@ app.get('/api/Filtre/vendeur/marque/categorie', async (req, res) => {
 });
 
 
-
-
 // affichage de l'ensemble des sous categories
 app.get('/api/category/subcategory/subsubcategory', async (req, res) => {
   try {
@@ -343,7 +341,7 @@ app.get('/api/vendeur', async (req, res) => {
 });
 
 // filtre de recherche pour le quiz
-app.get('/api/quiz', async (req, res) => {
+app.get('/api/quiz/budget', async (req, res) => {
   // echelle pour filtrer le budget
   const { limitBudget } = req.query;
   try {
@@ -366,7 +364,7 @@ app.get('/api/quiz', async (req, res) => {
   }
 });
 
-app.get('/api/reviews', async (req, res) => {
+app.get('/api/quiz/occasion', async (req, res) => {
   const { productIds, occasionType } = req.query;  // Attend une liste d'identifiants de produits séparés par des virgules
   try {
     const ids = productIds.split(',').map(id => Number(id.trim()));
@@ -375,6 +373,56 @@ app.get('/api/reviews', async (req, res) => {
                           WHERE occasion.${occasionType} = TRUE AND products.pk = ANY($1)`;
     const reviewsResult = await client.query(reviewsQuery, [ids]);
     res.json(reviewsResult.rows);
+    console.log('elimination d\'un second element', reviewsResult.rows);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des avis:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+app.get('/api/quiz/gender', async (req, res) => {
+  const { productIds, sexe_destinataire } = req.query;  // Attend une liste d'identifiants de produits séparés par des virgules
+  try {
+    const ids = productIds.split(',').map(id => Number(id.trim()));
+    const reviewsQuery = `SELECT * FROM products 
+                          JOIN sexe_destinataire ON products.pk = sexe_destinataire.product_id 
+                          WHERE sexe_destinataire.${sexe_destinataire} = TRUE AND products.pk = ANY($1)`;
+    const reviewsResult = await client.query(reviewsQuery, [ids]);
+    res.json(reviewsResult.rows);
+    console.log('elimination d\'un troisieme element', reviewsResult.rows);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des avis:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+app.get('/api/quiz/age', async (req, res) => {
+  const { productIds, age_destinataire } = req.query;  // Attend une liste d'identifiants de produits séparés par des virgules
+  try {
+    const ids = productIds.split(',').map(id => Number(id.trim()));
+    const reviewsQuery = `SELECT * FROM products 
+                          JOIN age_destinataire ON products.pk = age_destinataire.product_id 
+                          WHERE age_destinataire.${age_destinataire} = TRUE AND products.pk = ANY($1)`;
+    const reviewsResult = await client.query(reviewsQuery, [ids]);
+    res.json(reviewsResult.rows);
+    console.log('elimination d\'un quatrieme element', reviewsResult.rows);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des avis:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+app.get('/api/quiz/present_kind', async (req, res) => {
+  const { productIds, cadeau_type } = req.query;  // Attend une liste d'identifiants de produits séparés par des virgules
+  try {
+    const ids = productIds.split(',').map(id => Number(id.trim()));
+    const reviewsQuery = `SELECT * FROM products 
+                          WHERE ${cadeau_type} = TRUE AND products.pk = ANY($1)`;
+    const reviewsResult = await client.query(reviewsQuery, [ids]);
+    res.json(reviewsResult.rows);
+    console.log('elimination d\'un cinquieme element', reviewsResult.rows);
   } catch (error) {
     console.error('Erreur lors de la récupération des avis:', error);
     res.status(500).json({ error: 'Erreur serveur' });
