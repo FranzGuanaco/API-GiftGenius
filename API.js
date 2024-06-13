@@ -343,13 +343,13 @@ app.get('/api/vendeur', async (req, res) => {
 // filtre de recherche pour le quiz
 app.get('/api/quiz/budget', async (req, res) => {
   // echelle pour filtrer le budget
-  const { limitBudget } = req.query;
+  const { minBudget, maxBudget } = req.query;
   try {
-    const budgetQuery = `SELECT *
-                  FROM products
-                  JOIN price ON products.pk = price.product
-                  WHERE CAST(price.price AS numeric) < $1;`
-    const values = [limitBudget]; // Utilisation de paramètres de requête pour prévenir les injections SQL
+    const budgetQuery = `SELECT * FROM products
+                        JOIN price ON products.pk = price.product
+                        WHERE CAST(price.price AS numeric) < $1 AND CAST(price.price AS numeric) > $2;`
+    
+    const values = [minBudget, maxBudget]; // Utilisation de paramètres de requête pour prévenir les injections SQL
     const result = await client.query(budgetQuery, values);
     const budget = result.rows;
     console.log('elimination d\'un premier element', budget);
