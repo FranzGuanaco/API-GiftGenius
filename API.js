@@ -444,6 +444,21 @@ app.get('/api/quiz/passion_practical', async (req, res) => {
   }
 });
 
+app.get('/api/quiz/category', async (req, res) => {
+  const { productIds, cadeau_type } = req.query;  // Attend une liste d'identifiants de produits séparés par des virgules
+  try {
+    const ids = productIds.split(',').map(id => Number(id.trim()));
+    const reviewsQuery = `SELECT * FROM products 
+                          WHERE ${cadeau_type} = TRUE AND products.pk = ANY($1)`;
+    const reviewsResult = await client.query(reviewsQuery, [ids]);
+    res.json(reviewsResult.rows);
+    console.log('elimination d\'un sixieme element', reviewsResult.rows);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des avis:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+}); //
+
 
 
 app.get('/', async (req, res) => {
