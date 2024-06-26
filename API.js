@@ -469,15 +469,48 @@ app.get('/api/quiz/category', async (req, res) => {
     const ids = productIds.split(',').map(id => Number(id.trim()));
     const reviewsQuery = `SELECT products.pk AS product_id, products.*
                           FROM products
-                          WHERE category = ${products_category} AND products.pk = ANY($1);`
-    const reviewsResult = await client.query(reviewsQuery, [ids]);
+                          WHERE category = $2 AND products.pk = ANY($1);`
+    const reviewsResult = await client.query(reviewsQuery, [ids, products_category]);
     res.json(reviewsResult.rows);
-    console.log('elimination d\'un septieme element', reviewsResult.rows);
+    console.log('Elimination d\'un septieme element', reviewsResult.rows);
   } catch (error) {
     console.error('Erreur lors de la récupération des avis:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
-}); //
+});
+ 
+
+app.get('/api/quiz/subcategory', async (req, res) => {
+  const { productIds, products_subcategory } = req.query;  // Attend une liste d'identifiants de produits séparés par des virgules
+  try {
+    const ids = productIds.split(',').map(id => Number(id.trim()));
+    const reviewsQuery = `SELECT products.pk AS product_id, products.*
+                          FROM products
+                          WHERE subcategory = $2 AND products.pk = ANY($1);`
+    const reviewsResult = await client.query(reviewsQuery, [ids, products_subcategory]);
+    res.json(reviewsResult.rows);
+    console.log('Elimination d\'un huitieme element', reviewsResult.rows);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des avis:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+app.get('/api/quiz/s.subcategory', async (req, res) => {
+  const { productIds, products_subcategory } = req.query;  // Attend une liste d'identifiants de produits séparés par des virgules
+  try {
+    const ids = productIds.split(',').map(id => Number(id.trim()));
+    const reviewsQuery = `SELECT products.pk AS product_id, products.*
+                          FROM products
+                          WHERE subsubcategory = $2 AND products.pk = ANY($1);`
+    const reviewsResult = await client.query(reviewsQuery, [ids, products_subcategory]);
+    res.json(reviewsResult.rows);
+    console.log('Elimination d\'un neuvieme element', reviewsResult.rows);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des avis:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
 
 
 
