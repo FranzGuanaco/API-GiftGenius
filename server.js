@@ -26,13 +26,13 @@ client.connect()
 
 // Importer les routes
 const interfaceAPIRoutes = require('./API/InterfaceAPI');
-
 const quizRoutes = require('./API/Quiz');
+const huggingFaceRoutes = require('./API/OpenAIQuiz'); // Nouvelle route OpenAI
 
 // Utiliser les routes
 app.use('/api/interface', interfaceAPIRoutes);
-
 app.use('/api/quiz', quizRoutes);
+app.use('/api/claude', huggingFaceRoutes);
 
 // Ajout du code pour démarrer le serveur
 app.listen(port, () => {
