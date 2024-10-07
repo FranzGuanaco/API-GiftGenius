@@ -94,12 +94,12 @@ router.get('/budget', async (req, res) => {
       const ids = productIds.split(',').map(id => Number(id.trim()));
   
       const reviewsQuery = `SELECT 
-                            products.pk AS product_id, 
-                            products.*, 
-                            age_destinataire.*
-                          FROM products
-                          JOIN age_destinataire ON products.pk = age_destinataire.product_id 
-                          WHERE age_destinataire.${age_destinataire} = TRUE AND products.pk = ANY($1);`
+                              products.pk AS product_id, 
+                              products.*, 
+                              age_destinataire.*
+                            FROM products
+                            JOIN age_destinataire ON products.pk = age_destinataire.product_id 
+                            WHERE age_destinataire.${age_destinataire} = TRUE AND products.pk = ANY($1);`
       const reviewsResult = await client.query(reviewsQuery, [ids]);
       res.json(reviewsResult.rows);
       console.log('Elimination d\'un quatrieme element', reviewsResult.rows);
@@ -149,9 +149,10 @@ router.get('/budget', async (req, res) => {
     try {
       const ids = productIds.split(',').map(id => Number(id.trim()));
       const reviewsQuery = `SELECT products.pk AS product_id, products.*
-                            FROM products
-                            WHERE category = $2 AND products.pk = ANY($1);`
-      const reviewsResult = await client.query(reviewsQuery, [ids, products_category]);
+                      FROM products
+                      WHERE products.category = $1 AND products.pk = ANY($2);`
+      const reviewsResult = await client.query(reviewsQuery, [products_category, ids]);
+
       res.json(reviewsResult.rows);
       console.log('Elimination d\'un septieme element', reviewsResult.rows);
     } catch (error) {
