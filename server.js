@@ -1,9 +1,10 @@
 const express = require('express');
 const { Client } = require('pg');
 const cors = require('cors');
-
 const app = express();
 const port = 3001;
+require('dotenv').config(); // Charge les variables d'environnement
+const PG_PASSWORD = process.env.PG_PASSWORD;
 
 app.use(express.json());
 app.use(cors({
@@ -15,7 +16,7 @@ const client = new Client({
   user: 'pierrechevin',
   host: 'localhost',
   database: 'GiftGenius',
-  password: 'Elsalvador60?',
+  password: PG_PASSWORD,
   port: 5432, // Port pour la connexion à PostgreSQL, pas pour l'API Express
 });
 
