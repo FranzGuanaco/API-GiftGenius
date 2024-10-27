@@ -4,13 +4,15 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Configuration, OpenAIApi } = require('openai');
 const router = express.Router();
+require('dotenv').config(); // Charge les variables d'environnement
+const PG_PASSWORD = process.env.PG_PASSWORD;
 
 // Configuration de la connexion à la base de données PostgreSQL
 const client = new Client({
   user: 'pierrechevin',
   host: 'localhost',
   database: 'GiftGenius',
-  password: 'Elsalvador60?',
+  password: PG_PASSWORD,
   port: 5432, // Port pour la connexion à PostgreSQL, pas pour l'API Express
 });
 
